@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Clock</string>
-    <string name="str_am">am</string>
-    <string name="str_pm">pm</string>
+    <string name="date_format">%tD %n</string>
+    <string name="time_format">%1$02d\n%2$02d\n%3$02d</string>
 </resources>

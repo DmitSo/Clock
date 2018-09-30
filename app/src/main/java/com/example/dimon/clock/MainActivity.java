@@ -4,58 +4,78 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.Time;
-import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-    final Time time = new Time();
-    Date date = new Date();
-    final Handler handler = new Handler();
+    Time    mTime;                  // used for updating time
+    Date    mDate;                  // used just for updating date, not time
+    Handler mUpdateClockHandler;    // used for executing clock update every sec
 
-    TextView tvHours, tvMinutes, tvSeconds, tvAmPm, tvDate;
+    TextView tvTime, tvDate;
 
-    final Runnable updateClockRunnable = new Runnable() {
+    /**
+     * This object has method run() which updates clock in current activity.
+     */
+    Runnable mUpdateClockRunnable = new Runnable() {
         @Override
         public void run() {
-            time.setToNow();
-            if (time.hour == 0 && time.minute == 0 && time.second == 0)
-                date = new Date();
-            updateClock(time.hour, time.minute, time.second, date);
-            handler.postDelayed(updateClockRunnable, 1000);
+            mTime.setToNow();
+            if (mTime.hour == 0 && mTime.minute == 0 && mTime.second == 0) {
+                mDate = new Date();
+            }
+
+            updateClock(mDate, mTime);
+            mUpdateClockHandler.postDelayed(mUpdateClockRunnable, 1000);
         }
     };
 
+    /**
+     * Variables initializes here
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tvHours = findViewById(R.id.tvHours);
-        tvMinutes = findViewById(R.id.tvMinutes);
-        tvSeconds = findViewById(R.id.tvSeconds);
-        tvAmPm = findViewById(R.id.tvAmPm);
-        tvDate = findViewById(R.id.tvDate);
 
-        handler.post(updateClockRunnable);
+        tvTime = findViewById(R.id.tvTime);
+        tvDate = findViewById(R.id.tvDate);
+        mDate = new Date();
+        mTime = new Time();
+        mUpdateClockHandler = new Handler();
     }
 
-    private void updateClock(int hours, int minutes, int seconds, Date date) {
-        String amPm;
-        if (hours > 12) {
-            amPm = getResources().getString(R.string.str_pm);
-            hours -= 12;
-        } else {
-            amPm = getResources().getString(R.string.str_am);
-        }
+    @Override
+    protected void onResume() {
+        mUpdateClockHandler.post(mUpdateClockRunnable);
+        super.onResume();
+    }
 
-        tvHours.setText(String.format("%02d", hours));
-        tvMinutes.setText(String.format("%02d", minutes));
-        tvSeconds.setText(String.format("%02d", seconds));
-        tvAmPm.setText(amPm);
-        tvDate.setText(String.format("%tF %n", date));
+    @Override
+    protected void onPause() {
+        mUpdateClockHandler.removeCallbacks(mUpdateClockRunnable);
+        super.onPause();
+    }
+
+
+    /**
+     * Method which updates clock using date and time provided in parameters
+     * (Important : time info in Date variable aren't used, Time variable used instead)
+     * @param date current date
+     * @param time current time
+     */
+    private void updateClock(Date date, Time time) {
+        int timeFormatId = R.string.time_format;
+        int dateFormatId = R.string.date_format;
+
+        String formattedTime = getString(timeFormatId,
+                time.hour,
+                time.minute,
+                time.second);
+        String formattedDate = getResources().getString(dateFormatId, date);
+
+        tvTime.setText(formattedTime);
+        tvDate.setText(formattedDate);
     }
 }
